@@ -10,6 +10,7 @@ export const pool = new Pool({ connectionString })
 export async function initDb() {
   const client = await pool.connect()
   try {
+    await client.query('CREATE EXTENSION IF NOT EXISTS vector;')
     await pgvector.registerTypes(client)
   } finally {
     client.release()

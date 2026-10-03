@@ -7,7 +7,7 @@ export async function fetchRuns() {
 }
 
 export async function saveRun(run) {
-  const response = await fetch('/api/run', {
+  const response = await fetch('http://localhost:8787/api/run', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(run),

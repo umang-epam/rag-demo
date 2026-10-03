@@ -8,9 +8,23 @@ import { initDb, pool, withTransaction } from './lib/db.js'
 
 const app = express()
 const PORT = Number(process.env.PORT || 8787)
-const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || 'text-embedding-004'
-const CHAT_MODEL = process.env.CHAT_MODEL || 'gemini-2.5-flash'
 const EMBEDDING_DIMENSION = Number(process.env.EMBEDDING_DIMENSION || 1536)
+
+function getEmbeddingModel() {
+  const model = process.env.EMBEDDING_MODEL
+  if (!model || model.includes('text-embedding')) {
+    return 'gemini-embedding-001'
+  }
+  return model
+}
+
+function getChatModel() {
+  const model = process.env.CHAT_MODEL
+  if (!model || model.includes('gpt-') || model === 'gemini-2.5-flash') {
+    return 'gemini-3.6-flash'
+  }
+  return model
+}
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.OPENAI_API_KEY,
@@ -66,23 +80,28 @@ app.get('/api/health', async (_req, res) => {
 app.post('/api/embed', async (req, res) => {
   try {
     const parsed = embedSchema.parse(req.body)
+    const modelToUse = getEmbeddingModel()
     const embeddings = await Promise.all(
       parsed.inputs.map(async (text) => {
         const response = await ai.models.embedContent({
-          model: EMBEDDING_MODEL,
+          model: modelToUse,
           contents: text,
           config: {
             outputDimensionality: EMBEDDING_DIMENSION,
           },
         })
-        return response.embedding.values
+        const values = response.embeddings?.[0]?.values || response.embedding?.values
+        if (!values) {
+          throw new Error(`Failed to extract embedding values for model ${modelToUse}`)
+        }
+        return values
       }),
     )
 
     res.json({
       embeddings,
       usage: null,
-      model: EMBEDDING_MODEL,
+      model: modelToUse,
     })
   } catch (error) {
     handleError(res, error)
@@ -237,9 +256,11 @@ app.post('/api/chat', async (req, res) => {
 
     const config = systemMessage ? { systemInstruction: systemMessage } : {}
 
+    const chatModelToUse = getChatModel()
+
     if (!stream) {
       const response = await ai.models.generateContent({
-        model: CHAT_MODEL,
+        model: chatModelToUse,
         contents,
         config,
       })
@@ -264,7 +285,7 @@ app.post('/api/chat', async (req, res) => {
     res.setHeader('Connection', 'keep-alive')
 
     const responseStream = await ai.models.generateContentStream({
-      model: CHAT_MODEL,
+      model: chatModelToUse,
       contents,
       config,
     })
@@ -304,9 +325,29 @@ app.post('/api/chat', async (req, res) => {
 })
 
 function handleError(res, error) {
-  if (error?.status && error?.message) {
-    res.status(error.status).json({ message: error.message })
-    return
+  let statusCode = 500
+  let message = error?.message || 'Unexpected server error'
+
+  if (typeof error?.status === 'number' && error.status >= 100 && error.status < 600) {
+    statusCode = error.status
+  } else if (typeof error?.statusCode === 'number' && error.statusCode >= 100 && error.statusCode < 600) {
+    statusCode = error.statusCode
+  } else if (typeof error?.error?.code === 'number' && error.error.code >= 100 && error.error.code < 600) {
+    statusCode = error.error.code
+  }
+
+  if (typeof message === 'string' && message.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(message)
+      if (parsed.error?.message) {
+        message = parsed.error.message
+      }
+      if (typeof parsed.error?.code === 'number') {
+        statusCode = parsed.error.code
+      }
+    } catch {
+      // ignore JSON parse failure
+    }
   }
 
   if (error?.issues) {
@@ -314,9 +355,7 @@ function handleError(res, error) {
     return
   }
 
-  res.status(500).json({
-    message: error?.message || 'Unexpected server error',
-  })
+  res.status(statusCode).json({ message })
 }
 
 async function bootstrap() {
