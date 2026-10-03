@@ -11,5 +11,20 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rag-demo-web
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env.local
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/rag_demo
+    depends_on:
+      - postgres
+
 volumes:
   pgdata:
+

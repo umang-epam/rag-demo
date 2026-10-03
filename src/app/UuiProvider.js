@@ -1,10 +1,11 @@
 'use client';
 
+import { Suspense } from 'react';
 import { UuiContext, useUuiServices, useNextAppRouter } from '@epam/uui-core';
 import { ErrorHandler, Snackbar } from '@epam/uui';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
-export function UuiProvider({ children }) {
+function UuiServicesInner({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -22,5 +23,13 @@ export function UuiProvider({ children }) {
         <Snackbar />
       </ErrorHandler>
     </UuiContext.Provider>
+  );
+}
+
+export function UuiProvider({ children }) {
+  return (
+    <Suspense fallback={null}>
+      <UuiServicesInner>{children}</UuiServicesInner>
+    </Suspense>
   );
 }

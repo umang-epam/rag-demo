@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# RAG vs No-RAG Visual Pipeline Demo
 
-## Getting Started
+A modern Next.js visual demonstration comparing **Retrieval-Augmented Generation (RAG)** against **Full-Document Prompting (No-RAG)** using EPAM DIAL API, vector storage (`pgvector`), and interactive metrics visualization.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🎨 Features & Design
+
+- **Dark Mode Palette**: Crafted using curated high-contrast dark theme colors:
+  - **Sea** (`#00F6FF`): Primary accents, active step highlights, RAG indicators.
+  - **Mint** (`#00FFF0`): Completed badges, metric numbers, status updates.
+  - **Lilac** (`#B896FF`): Section headers, subheadings, No-RAG mode toggles.
+  - **Sky** (`#7BA8FF`): Table headers, labels, duration timers.
+  - **Night** (`#060606`): Deep baseline dark theme surface background.
+- **EPAM Gradient Buttons**: Custom interactive buttons with neon glow effects.
+- **Multi-Stage Pipeline Progress Bar**: Real-time horizontal stepper track displaying step-by-step execution status, durations, and stage metrics.
+- **EPAM DIAL API Integration**: LLM chat completions with streaming deltas (`text/event-stream`) and token usage tracking.
+- **Vector Store**: Document chunking and vector storage via `pgvector` and Gemini Embeddings.
+- **Metrics & Comparison**: Real-time token usage, context sizes, latency calculations, and Recharts run comparison graph.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16 (App Router) & React 19
+- **Styling**: Tailwind CSS v4 & @epam/uui
+- **LLM Provider**: EPAM DIAL API (`https://ai-proxy.lab.epam.com`)
+- **Embeddings**: Gemini Embeddings (`gemini-embedding-001`)
+- **Database / Vector Store**: PostgreSQL with `pgvector` extension
+- **Charts & Visualization**: Recharts & Dropzone
+
+---
+
+## 🚀 Getting Started
+
+### 1. Prerequisites
+
+- **Node.js**: v20 or higher
+- **PostgreSQL**: v15+ with `pgvector` extension installed
+
+### 2. Environment Setup
+
+Create or update `.env.local` in the project root:
+
+```env
+PORT=3000
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/rag_demo
+
+# EPAM DIAL API
+DIAL_API_KEY=your-dial-api-key
+DIAL_API_BASE_URL=https://ai-proxy.lab.epam.com/openai/deployments/gpt-4/chat/completions
+
+# Embeddings
+GEMINI_API_KEY=your-gemini-api-key
+EMBEDDING_MODEL=gemini-embedding-001
+EMBEDDING_DIMENSION=1536
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Install & Run Locally
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```bash
+# Install dependencies
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Run development server
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🐳 Docker Deployment (Multi-Stage)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This project includes an optimized multi-stage `Dockerfile` with Next.js standalone output.
 
-## Deploy on Vercel
+### Build & Run Container
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+# Build production Docker image
+docker build -t rag-demo:latest .
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# Run Docker container
+docker run -d -p 3000:3000 --env-file .env.local --name rag-demo-app rag-demo:latest
+```
+
+---
+
+## 📜 Available Scripts
+
+- `npm run dev`: Starts Next.js development server.
+- `npm run build`: Compiles production build and generates standalone bundle.
+- `npm start`: Starts production server from build output.
+- `npm run lint`: Runs ESLint checks.
