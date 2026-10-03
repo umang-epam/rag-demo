@@ -22,4 +22,12 @@ export function getChatModel() {
   return model
 }
 
+export function getDialConfig() {
+  return {
+    apiKey: process.env.DIAL_API_KEY || 'dial-92hpkrru2juod2rq0q8yz7cnw2a',
+    baseUrl: process.env.DIAL_API_BASE_URL || 'https://ai-proxy.lab.epam.com/openai/deployments/gpt-4/chat/completions',
+  }
+}
+
 export const EMBEDDING_DIMENSION = Number(process.env.EMBEDDING_DIMENSION || 1536)
+
