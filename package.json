@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "concurrently -n client,server -c cyan,green \"npm --prefix client run dev\" \"npm --prefix server run dev\"",
+    "dev:next": "npm --prefix next-app run dev",
     "build": "npm --prefix client run build",
+    "build:next": "npm --prefix next-app run build",
     "start": "npm --prefix server run start",
     "db:migrate": "npm --prefix server run migrate"
   },

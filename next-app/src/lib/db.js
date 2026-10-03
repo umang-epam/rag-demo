@@ -1,0 +1,40 @@
+import pg from 'pg'
+import pgvector from 'pgvector/pg'
+
+const { Pool } = pg
+
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/rag_demo'
+
+let pool
+
+if (!global._pgPool) {
+  global._pgPool = new Pool({ connectionString })
+}
+pool = global._pgPool
+
+export { pool }
+
+export async function initDb() {
+  const client = await pool.connect()
+  try {
+    await client.query('CREATE EXTENSION IF NOT EXISTS vector;')
+    await pgvector.registerTypes(client)
+  } finally {
+    client.release()
+  }
+}
+
+export async function withTransaction(fn) {
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const result = await fn(client)
+    await client.query('COMMIT')
+    return result
+  } catch (error) {
+    await client.query('ROLLBACK')
+    throw error
+  } finally {
+    client.release()
+  }
+}
