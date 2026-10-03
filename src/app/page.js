@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import ComparisonTable from '@/components/ComparisonTable'
 import MetricsPanel from '@/components/MetricsPanel'
 import ModeToggle from '@/components/ModeToggle'
-import { Badge, Button, Text } from '@epam/promo'
+import GradientButton from '@/components/GradientButton'
+import { Badge } from '@epam/promo'
 import { LabeledInput, NumericInput, TextArea } from '@epam/uui'
 import PdfUploader from '@/components/PdfUploader'
 import StepVisualizer from '@/components/StepVisualizer'
@@ -128,45 +129,40 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--uui-surface-main)] text-[var(--uui-text-primary)]">
+    <div className="min-h-screen bg-[#060606] text-zinc-100 font-sans">
       <main className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-6 lg:px-8">
-        <header className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <header className="rounded-2xl border border-zinc-800 bg-[#121214] p-6 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-widest text-[var(--uui-color-primary)]">Next.js + Gemini + pgvector Demo</p>
-              <h1 className="mt-1 text-4xl font-black tracking-tight text-[var(--uui-text-primary)]">RAG vs No-RAG Visual Pipeline</h1>
+              <p className="text-sm font-bold uppercase tracking-widest text-[#B896FF]">Next.js + Gemini + pgvector Demo</p>
+              <h1 className="mt-1 text-4xl font-black tracking-tight text-white">RAG vs No-RAG Visual Pipeline</h1>
             </div>
             <Badge color="blue" fill="light" caption="Next.js App Router" />
           </div>
-          <p className="mt-2 text-base text-[var(--uui-text-secondary)]">
+          <p className="mt-2 text-base text-zinc-400">
             Upload a PDF, ask a question, then compare retrieval-augmented generation against full-document prompting.
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <ModeToggle mode={mode} onChange={setMode} />
-            <Button
-              onClick={preloadSample}
-              fill="white"
-              caption="Preload sample PDF"
-            />
-            <Button
-              onClick={handleReset}
-              fill="none"
-              color="red"
-              caption="Reset"
-            />
+            <GradientButton onClick={preloadSample} variant="secondary" size="md">
+              Preload sample PDF
+            </GradientButton>
+            <GradientButton onClick={handleReset} variant="danger" size="md">
+              Reset
+            </GradientButton>
           </div>
         </header>
 
         {combinedError ? (
-          <div className="rounded-xl border border-[var(--uui-error-50)] bg-[var(--uui-error-10)] p-3 font-semibold text-[var(--uui-color-error)]">{combinedError}</div>
+          <div className="rounded-xl border border-red-500/50 bg-red-500/10 p-3 font-semibold text-red-400">{combinedError}</div>
         ) : null}
 
         <section className="grid gap-5 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
             <PdfUploader fileName={pdfName} onPick={parseAndSet} />
 
-            <div className="rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
+            <div className="rounded-2xl border border-zinc-800 bg-[#121214] p-5 shadow-lg">
               <LabeledInput label="Question" className="mt-2">
                 <TextArea
                   value={question}
@@ -182,14 +178,16 @@ export default function Home() {
                 <LabeledNumberInput label="Top K" value={topK} onChange={setTopK} disabled={mode !== 'RAG'} />
               </div>
 
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <Button
-                  isDisabled={!canRun}
+              <div className="mt-4 flex flex-wrap items-center gap-4">
+                <GradientButton
+                  disabled={!canRun}
                   onClick={handleRun}
-                  caption={activePipeline.isRunning ? 'Running...' : `Run ${mode}`}
-                  color="blue"
-                />
-                <span className="text-sm font-medium text-slate-600">{uploadProgress}</span>
+                  variant={mode === 'RAG' ? 'primary' : 'secondary'}
+                  size="lg"
+                >
+                  {activePipeline.isRunning ? 'Running...' : `Run ${mode}`}
+                </GradientButton>
+                <span className="text-sm font-semibold text-[#00FFF0]">{uploadProgress}</span>
               </div>
             </div>
 
@@ -204,9 +202,9 @@ export default function Home() {
 
         <section className="grid gap-4 lg:grid-cols-2">
           <PromptPanel title="Prompt sent to LLM" text={activePipeline.promptPreview} />
-          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-2xl font-black text-[var(--uui-text-primary)]">Generated Answer</h2>
-            <p className="mt-3 whitespace-pre-wrap text-base leading-7 text-[var(--uui-text-secondary)]">
+          <section className="rounded-2xl border border-zinc-800 bg-[#121214] p-5 shadow-lg">
+            <h2 className="text-2xl font-black text-[#00FFF0]">Generated Answer</h2>
+            <p className="mt-3 whitespace-pre-wrap text-base leading-7 text-zinc-300">
               {activePipeline.answer || 'Run the pipeline to generate an answer.'}
             </p>
           </section>
@@ -230,9 +228,9 @@ function LabeledNumberInput({ label, value, onChange, disabled }) {
 
 function PromptPanel({ title, text }) {
   return (
-    <details className="rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-      <summary className="cursor-pointer text-xl font-black text-slate-900">{title}</summary>
-      <pre className="mt-3 max-h-96 overflow-auto rounded-lg bg-slate-950 p-3 text-sm leading-6 text-slate-100">
+    <details className="rounded-2xl border border-zinc-800 bg-[#121214] p-5 shadow-lg group">
+      <summary className="cursor-pointer text-xl font-black text-[#7BA8FF] hover:text-[#00F6FF] transition-colors">{title}</summary>
+      <pre className="mt-3 max-h-96 overflow-auto rounded-lg border border-zinc-800 bg-[#0a0a0c] p-4 text-sm leading-6 text-[#00F6FF]">
         {text || 'Prompt will appear after run starts.'}
       </pre>
     </details>

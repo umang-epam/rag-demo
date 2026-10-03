@@ -1,16 +1,16 @@
 export default function MetricsPanel({ metrics }) {
   if (!metrics) {
     return (
-      <section className="rounded-2xl border border-slate-300 bg-white p-4">
-        <h2 className="text-2xl font-black text-slate-900">Metrics</h2>
-        <p className="mt-2 text-slate-600">Run a pipeline to see timing and token metrics.</p>
+      <section className="rounded-2xl border border-zinc-800 bg-[#121214] p-5 shadow-lg">
+        <h2 className="text-2xl font-black text-[#B896FF]">Metrics</h2>
+        <p className="mt-2 text-zinc-400">Run a pipeline to see timing and token metrics.</p>
       </section>
     )
   }
 
   return (
-    <section className="rounded-2xl border border-slate-300 bg-white p-4">
-      <h2 className="text-2xl font-black text-slate-900">Metrics ({metrics.mode})</h2>
+    <section className="rounded-2xl border border-zinc-800 bg-[#121214] p-5 shadow-lg">
+      <h2 className="text-2xl font-black text-[#B896FF]">Metrics ({metrics.mode})</h2>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         <MetricRow label="Total time" value={`${metrics.totalTimeMs.toFixed(1)} ms`} />
         <MetricRow label="Prompt tokens" value={metrics.promptTokens.toLocaleString()} />
@@ -26,9 +26,9 @@ export default function MetricsPanel({ metrics }) {
 
 function MetricRow({ label, value }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-      <p className="text-sm font-semibold uppercase tracking-wide text-slate-600">{label}</p>
-      <p className="text-xl font-black text-slate-900">{value}</p>
+    <div className="rounded-lg border border-zinc-800 bg-[#18181b] p-3 transition-colors hover:border-zinc-700">
+      <p className="text-xs font-semibold uppercase tracking-wider text-[#7BA8FF]">{label}</p>
+      <p className="text-xl font-black text-[#00FFF0]">{value}</p>
     </div>
   )
 }

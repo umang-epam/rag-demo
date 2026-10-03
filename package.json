@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@epam/electric": "^6.5.3",
     "@epam/promo": "^6.5.3",
     "@epam/uui": "^6.5.3",
     "@epam/uui-components": "^6.5.3",

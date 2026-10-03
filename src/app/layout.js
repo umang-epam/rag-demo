@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="uui-theme-promo min-h-full flex flex-col">
+      <body className="uui-theme-promo min-h-full flex flex-col bg-[#060606] text-zinc-100 antialiased">
         <UuiProvider>{children}</UuiProvider>
       </body>
     </html>
