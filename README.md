@@ -19,7 +19,7 @@ The UI visualizes every step with real timing and keeps run history for immediat
 
 - Node.js 20+
 - Docker Desktop (for local Postgres + pgvector)
-- OpenAI API key (or OpenAI-compatible base URL + key)
+- Gemini API key (`GEMINI_API_KEY`)
 
 ## 1) Start PostgreSQL + pgvector
 
@@ -39,9 +39,9 @@ cp server/.env.example server/.env
 
 Set at least:
 
-- OPENAI_API_KEY
-- EMBEDDING_MODEL (default: text-embedding-3-small)
-- CHAT_MODEL (default: gpt-4.1-mini)
+- GEMINI_API_KEY
+- EMBEDDING_MODEL (default: text-embedding-004)
+- CHAT_MODEL (default: gemini-2.5-flash)
 - DATABASE_URL (default points to docker compose postgres)
 
 ## 3) Install dependencies

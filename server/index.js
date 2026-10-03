@@ -1,20 +1,19 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
-import OpenAI from 'openai'
+import { GoogleGenAI } from '@google/genai'
 import pgvector from 'pgvector'
 import { z } from 'zod'
 import { initDb, pool, withTransaction } from './lib/db.js'
 
 const app = express()
 const PORT = Number(process.env.PORT || 8787)
-const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || 'text-embedding-3-small'
-const CHAT_MODEL = process.env.CHAT_MODEL || 'gpt-4.1-mini'
+const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL || 'text-embedding-004'
+const CHAT_MODEL = process.env.CHAT_MODEL || 'gemini-2.5-flash'
 const EMBEDDING_DIMENSION = Number(process.env.EMBEDDING_DIMENSION || 1536)
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL || undefined,
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.OPENAI_API_KEY,
 })
 
 app.use(cors())
@@ -67,15 +66,23 @@ app.get('/api/health', async (_req, res) => {
 app.post('/api/embed', async (req, res) => {
   try {
     const parsed = embedSchema.parse(req.body)
-    const response = await client.embeddings.create({
-      model: EMBEDDING_MODEL,
-      input: parsed.inputs,
-    })
+    const embeddings = await Promise.all(
+      parsed.inputs.map(async (text) => {
+        const response = await ai.models.embedContent({
+          model: EMBEDDING_MODEL,
+          contents: text,
+          config: {
+            outputDimensionality: EMBEDDING_DIMENSION,
+          },
+        })
+        return response.embedding.values
+      }),
+    )
 
     res.json({
-      embeddings: response.data.map((item) => item.embedding),
-      usage: response.usage || null,
-      model: response.model,
+      embeddings,
+      usage: null,
+      model: EMBEDDING_MODEL,
     })
   } catch (error) {
     handleError(res, error)
@@ -220,15 +227,34 @@ app.post('/api/chat', async (req, res) => {
     const parsed = chatSchema.parse(req.body)
     const stream = Boolean(parsed.stream)
 
+    const systemMessage = parsed.messages.find((m) => m.role === 'system')?.content
+    const contents = parsed.messages
+      .filter((m) => m.role !== 'system')
+      .map((m) => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content }],
+      }))
+
+    const config = systemMessage ? { systemInstruction: systemMessage } : {}
+
     if (!stream) {
-      const completion = await client.chat.completions.create({
+      const response = await ai.models.generateContent({
         model: CHAT_MODEL,
-        messages: parsed.messages,
+        contents,
+        config,
       })
 
+      const usage = response.usageMetadata
+        ? {
+            prompt_tokens: response.usageMetadata.promptTokenCount || 0,
+            completion_tokens: response.usageMetadata.candidatesTokenCount || 0,
+            total_tokens: response.usageMetadata.totalTokenCount || 0,
+          }
+        : null
+
       res.json({
-        answer: completion.choices[0]?.message?.content || '',
-        usage: completion.usage || null,
+        answer: response.text || '',
+        usage,
       })
       return
     }
@@ -237,24 +263,27 @@ app.post('/api/chat', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache')
     res.setHeader('Connection', 'keep-alive')
 
-    const completion = await client.chat.completions.create({
+    const responseStream = await ai.models.generateContentStream({
       model: CHAT_MODEL,
-      messages: parsed.messages,
-      stream: true,
-      stream_options: { include_usage: true },
+      contents,
+      config,
     })
 
-    for await (const chunk of completion) {
-      if (chunk.choices?.length > 0) {
-        const delta = chunk.choices[0]?.delta?.content
-        if (delta) {
-          res.write(`data: ${JSON.stringify({ type: 'delta', delta })}\n\n`)
-        }
+    for await (const chunk of responseStream) {
+      if (chunk.text) {
+        res.write(`data: ${JSON.stringify({ type: 'delta', delta: chunk.text })}\n\n`)
       }
 
-      if (chunk.usage) {
+      if (chunk.usageMetadata) {
         res.write(
-          `data: ${JSON.stringify({ type: 'usage', usage: chunk.usage })}\n\n`,
+          `data: ${JSON.stringify({
+            type: 'usage',
+            usage: {
+              prompt_tokens: chunk.usageMetadata.promptTokenCount || 0,
+              completion_tokens: chunk.usageMetadata.candidatesTokenCount || 0,
+              total_tokens: chunk.usageMetadata.totalTokenCount || 0,
+            },
+          })}\n\n`,
         )
       }
     }
