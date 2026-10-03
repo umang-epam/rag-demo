@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import ComparisonTable from '@/components/ComparisonTable'
 import MetricsPanel from '@/components/MetricsPanel'
 import ModeToggle from '@/components/ModeToggle'
+import { Badge, Button, Text } from '@epam/promo'
+import { LabeledInput, NumericInput, TextArea } from '@epam/uui'
 import PdfUploader from '@/components/PdfUploader'
 import StepVisualizer from '@/components/StepVisualizer'
 import { useNoRagPipeline } from '@/hooks/useNoRagPipeline'
@@ -126,41 +128,38 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-cyan-50 text-slate-900">
+    <div className="min-h-screen bg-[var(--uui-surface-main)] text-[var(--uui-text-primary)]">
       <main className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-6 lg:px-8">
-        <header className="rounded-2xl border border-slate-300 bg-white p-5 shadow-sm">
+        <header className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-widest text-cyan-700">Next.js + Gemini + pgvector Demo</p>
-              <h1 className="mt-1 text-4xl font-black tracking-tight">RAG vs No-RAG Visual Pipeline</h1>
+              <p className="text-sm font-semibold uppercase tracking-widest text-[var(--uui-color-primary)]">Next.js + Gemini + pgvector Demo</p>
+              <h1 className="mt-1 text-4xl font-black tracking-tight text-[var(--uui-text-primary)]">RAG vs No-RAG Visual Pipeline</h1>
             </div>
-            <span className="rounded-full bg-cyan-100 px-3 py-1 text-xs font-bold uppercase text-cyan-800">Next.js App Router</span>
+            <Badge color="blue" fill="light" caption="Next.js App Router" />
           </div>
-          <p className="mt-2 text-base text-slate-700">
+          <p className="mt-2 text-base text-[var(--uui-text-secondary)]">
             Upload a PDF, ask a question, then compare retrieval-augmented generation against full-document prompting.
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <ModeToggle mode={mode} onChange={setMode} />
-            <button
-              type="button"
+            <Button
               onClick={preloadSample}
-              className="rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100"
-            >
-              Preload sample PDF
-            </button>
-            <button
-              type="button"
+              fill="white"
+              caption="Preload sample PDF"
+            />
+            <Button
               onClick={handleReset}
-              className="rounded-lg border border-rose-300 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100"
-            >
-              Reset
-            </button>
+              fill="none"
+              color="red"
+              caption="Reset"
+            />
           </div>
         </header>
 
         {combinedError ? (
-          <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 font-semibold text-rose-700">{combinedError}</div>
+          <div className="rounded-xl border border-[var(--uui-error-50)] bg-[var(--uui-error-10)] p-3 font-semibold text-[var(--uui-color-error)]">{combinedError}</div>
         ) : null}
 
         <section className="grid gap-5 lg:grid-cols-3">
@@ -168,13 +167,14 @@ export default function Home() {
             <PdfUploader fileName={pdfName} onPick={parseAndSet} />
 
             <div className="rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-              <label className="block text-sm font-bold uppercase tracking-wide text-slate-700">Question</label>
-              <textarea
-                value={question}
-                onChange={(event) => setQuestion(event.target.value)}
-                placeholder="Ask a question about the PDF"
-                className="mt-2 h-24 w-full rounded-lg border border-slate-300 px-3 py-2 text-base focus:border-blue-500 focus:outline-none"
-              />
+              <LabeledInput label="Question" className="mt-2">
+                <TextArea
+                  value={question}
+                  onValueChange={setQuestion}
+                  placeholder="Ask a question about the PDF"
+                  rows={4}
+                />
+              </LabeledInput>
 
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <LabeledNumberInput label="Chunk size" value={chunkSize} onChange={setChunkSize} disabled={mode !== 'RAG'} />
@@ -183,14 +183,12 @@ export default function Home() {
               </div>
 
               <div className="mt-4 flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  disabled={!canRun}
+                <Button
+                  isDisabled={!canRun}
                   onClick={handleRun}
-                  className="rounded-lg bg-blue-600 px-5 py-2 text-base font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-                >
-                  {activePipeline.isRunning ? 'Running...' : `Run ${mode}`}
-                </button>
+                  caption={activePipeline.isRunning ? 'Running...' : `Run ${mode}`}
+                  color="blue"
+                />
                 <span className="text-sm font-medium text-slate-600">{uploadProgress}</span>
               </div>
             </div>
@@ -206,9 +204,9 @@ export default function Home() {
 
         <section className="grid gap-4 lg:grid-cols-2">
           <PromptPanel title="Prompt sent to LLM" text={activePipeline.promptPreview} />
-          <section className="rounded-2xl border border-slate-300 bg-white p-4 shadow-sm">
-            <h2 className="text-2xl font-black text-slate-900">Generated Answer</h2>
-            <p className="mt-3 whitespace-pre-wrap text-base leading-7 text-slate-800">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <h2 className="text-2xl font-black text-[var(--uui-text-primary)]">Generated Answer</h2>
+            <p className="mt-3 whitespace-pre-wrap text-base leading-7 text-[var(--uui-text-secondary)]">
               {activePipeline.answer || 'Run the pipeline to generate an answer.'}
             </p>
           </section>
@@ -220,16 +218,13 @@ export default function Home() {
 
 function LabeledNumberInput({ label, value, onChange, disabled }) {
   return (
-    <label className="block">
-      <span className="text-sm font-bold uppercase tracking-wide text-slate-700">{label}</span>
-      <input
-        type="number"
+    <LabeledInput label={label}>
+      <NumericInput
         value={value}
-        onChange={(event) => onChange(Number(event.target.value))}
-        disabled={disabled}
-        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 disabled:bg-slate-100"
+        onValueChange={onChange}
+        isDisabled={disabled}
       />
-    </label>
+    </LabeledInput>
   )
 }
 
